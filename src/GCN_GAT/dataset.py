@@ -30,7 +30,8 @@ data_index = {
 
 
 def get_train_data(dataset_name):
-    path = '../../BotRGCN/{}/processed_data'.format(data_index[dataset_name])
+    # path = '../../BotRGCN/{}/processed_data'.format(data_index[dataset_name])
+    path = '../BotRGCN/{}/processed_data'.format(data_index[dataset_name])
     if not osp.exists(path):
         raise KeyError
     labels = torch.load(osp.join(path, 'label.pt'))
