@@ -33,3 +33,4 @@ result*
 glove.*
 lightning_logs
 src/BotRGCN/datasets/*
+src/BotRGCN/twibot_20/processed_data/

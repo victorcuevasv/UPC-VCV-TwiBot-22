@@ -6,12 +6,14 @@ from datetime import datetime as dt
 from dataset_tool import fast_merge,df_to_mask
 import os
 
+
 print('loading raw data')
 node=pd.read_json("../datasets/Twibot-20/node.json")
 edge=pd.read_csv("../datasets/Twibot-20/edge.csv")
 label=pd.read_csv("../datasets/Twibot-20/label.csv")
 split=pd.read_csv("../datasets/Twibot-20/split.csv")
 print('processing raw data')
+
 user,tweet=fast_merge(dataset='Twibot-20')
 path='processed_data/'
 
@@ -149,6 +151,7 @@ statues=torch.tensor(np.array(statues),dtype=torch.float32)
 num_properties_tensor=torch.cat([followers_count,active_days,screen_name_length,following_count,statues],dim=1)
 torch.save(num_properties_tensor,path+'num_properties_tensor.pt')
 
+
 #cat_properties
 print('extracting cat_properties')
 default_profile_image=[]
@@ -161,7 +164,7 @@ for each in user['profile_image_url']:
     else:
         default_profile_image.append(int(1))
 
-default_profile_image_tensor=torch.tensor(default_profile_image,dtype=torch.float)
+#### default_profile_image_tensor=torch.tensor(default_profile_image,dtype=torch.float)
 
 protected=user['protected']
 protected_list=[]
@@ -179,9 +182,14 @@ for each in verified:
     else:
         verified_list.append(0)
 
+tensorList = [torch.tensor(default_profile_image).float(), torch.tensor(protected_list).float(), torch.tensor(verified_list).float()]
+default_profile_image_tensor = torch.stack(tensorList , dim=1)
+#### cat_properties_tensor=default_profile_image_tensor.reshape([5301,1])
+print(f"default_profile_image_tensor.size(): {default_profile_image_tensor.size()}")
+#### cat_properties_tensor=default_profile_image_tensor.reshape([229580,1])
+#### torch.save(cat_properties_tensor,path+'cat_properties_tensor.pt')
+torch.save(default_profile_image_tensor,path+'cat_properties_tensor.pt')
 
-cat_properties_tensor=default_profile_image_tensor.reshape([5301,1])
-torch.save(cat_properties_tensor,path+'cat_properties_tensor.pt')
 
 #get each_user_tweets
 user, tweet = fast_merge("Twibot-20", '209')
@@ -228,3 +236,6 @@ for i in tqdm(range(len(edge))):
         dict[edge.iloc[i]['source_id']].append(edge.iloc[i]['target_id'])
 
 np.save('processed_data/each_user_tweets.npy',dict)
+
+
+
