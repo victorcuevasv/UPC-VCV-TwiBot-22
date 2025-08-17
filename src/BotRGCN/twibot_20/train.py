@@ -62,10 +62,13 @@ def test():
     print("Test set results:",
             "test_loss= {:.4f}".format(loss_test.item()),
             "test_accuracy= {:.4f}".format(acc_test.item()),
-            "precision= {:.4f}".format(precision.item()),
-            "recall= {:.4f}".format(recall.item()),
-            "f1_score= {:.4f}".format(f1.item()),
-            #"mcc= {:.4f}".format(mcc.item()),
+            ## "precision= {:.4f}".format(precision.item()),
+            "precision= {:.4f}".format(precision),
+            ## "recall= {:.4f}".format(recall.item()),
+            "recall= {:.4f}".format(recall),
+            ## "f1_score= {:.4f}".format(f1.item()),
+            "f1_score= {:.4f}".format(f1),
+            ##"mcc= {:.4f}".format(mcc.item()),
             "auc= {:.4f}".format(Auc.item()),
             )
     

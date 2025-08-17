@@ -1,0 +1,47 @@
+
+# Install gh
+
+conda install gh -y --channel conda-forge
+
+# Clone repository
+
+gh repo clone LuoUndergradXJTU/TwiBot-22
+
+
+# Install rclone
+
+sudo -v ; curl https://rclone.org/install.sh | sudo bash
+
+# Config rclone (for Google drive see: https://rclone.org/drive/)
+
+rclone config
+
+# Download TwiBot-20 data
+
+rclone copy "gdrive_scalian_remote:TwiBot-20" ./TwiBot-20 --drive-shared-with-me --drive-chunk-size 128M --progress
+
+# Create virtual environment (remove with: conda remove -n twibot22_env --all)
+
+conda create -y -n twibot22_botrgcn_env python=3.9
+
+# Activate virtual environment
+
+conda activate twibot22_botrgcn_env
+
+# Add dependencies
+
+pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0 --extra-index-url https://download.pytorch.org/whl/cu113
+
+pip install scipy==1.10.1
+
+pip install --no-index torch-scatter -f https://pytorch-geometric.com/whl/torch-1.11.0%2Bcu113.html
+pip install --no-index torch-sparse -f https://pytorch-geometric.com/whl/torch-1.11.0%2Bcu113.html
+pip install --no-index torch-cluster -f https://pytorch-geometric.com/whl/torch-1.11.0%2Bcu113.html
+pip install --no-index torch-spline-conv -f https://pytorch-geometric.com/whl/torch-1.11.0%2Bcu113.html
+
+pip install torch-geometric==2.2.0
+pip install numpy==1.20.0
+pip install transformers==4.41.0
+pip install pandas==1.4.4
+
+

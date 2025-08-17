@@ -9,9 +9,11 @@ user,tweet=fast_merge(dataset="cresci-2015")
 
 user_text=list(user['description'])
 tweet_text = [text for text in tweet.text]
-each_user_tweets=torch.load('./processed_data/each_user_tweets.npy')
+# each_user_tweets=torch.load('./processed_data/each_user_tweets.npy')
+each_user_tweets=np.load('./processed_data/each_user_tweets.npy', allow_pickle=True).item()
 
-feature_extract=pipeline('feature-extraction',model='roberta-base',tokenizer='roberta-base',device=3,padding=True, truncation=True,max_length=50, add_special_tokens = True)
+# feature_extract=pipeline('feature-extraction',model='roberta-base',tokenizer='roberta-base',device=3,padding=True, truncation=True,max_length=50, add_special_tokens = True)
+feature_extract=pipeline('feature-extraction',model='roberta-base',tokenizer='roberta-base',device=0,padding=True, truncation=True,max_length=50, add_special_tokens = True)
 
 def Des_embbeding():
         print('Running feature1 embedding')

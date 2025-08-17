@@ -9,9 +9,11 @@ user,tweet=fast_merge(dataset="Twibot-20")
 
 user_text=list(user['description'])
 tweet_text = [text for text in tweet.text]
-each_user_tweets=torch.load('./processed_data/each_user_tweets.npy')
+# each_user_tweets=torch.load('./processed_data/each_user_tweets.npy')
+each_user_tweets=np.load('./processed_data/each_user_tweets.npy', allow_pickle=True).item()
 
-feature_extract=pipeline('feature-extraction',model='roberta-base',tokenizer='roberta-base',device=3,padding=True, truncation=True,max_length=50, add_special_tokens = True)
+# feature_extract=pipeline('feature-extraction',model='roberta-base',tokenizer='roberta-base',device=3,padding=True, truncation=True,max_length=50, add_special_tokens = True)
+feature_extract=pipeline('feature-extraction',model='roberta-base',tokenizer='roberta-base',device=0,padding=True, truncation=True,max_length=50, add_special_tokens = True)
 
 def Des_embbeding():
         print('Running feature1 embedding')
@@ -44,10 +46,18 @@ def tweets_embedding():
         if not os.path.exists(path):
             tweets_list=[]
             for i in tqdm(range(len(each_user_tweets))):
+                ####
+                ####if not (i % 10) == 0:
+                ####    continue
+                ####
                 if len(each_user_tweets[i])==0:
                     total_each_person_tweets=torch.zeros(768)
                 else:
                     for j in range(len(each_user_tweets[i])):
+                        ####
+                        ####if not (j % 4) == 0:
+                        ####    continue
+                        ####
                         each_tweet=tweet_text[each_user_tweets[i][j]]
                         if each_tweet is None:
                             total_word_tensor=torch.zeros(768)
@@ -79,5 +89,5 @@ def tweets_embedding():
             tweets_tensor=torch.load(path)
         print('Finished')
 
-Des_embbeding()
+# Des_embbeding()
 tweets_embedding()
