@@ -49,7 +49,8 @@ class BotRGCN(nn.Module):
         t=self.linear_relu_tweet(tweet)
         n=self.linear_relu_num_prop(num_prop)
         c=self.linear_relu_cat_prop(cat_prop)
-        
+        x=torch.cat((d,t,n,c),dim=1)
+
         x=self.linear_relu_input(x)
         x=self.rgcn(x,edge_index,edge_type)
         x=F.dropout(x,p=self.dropout,training=self.training)
