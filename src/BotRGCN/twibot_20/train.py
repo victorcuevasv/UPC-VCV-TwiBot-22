@@ -14,6 +14,7 @@ from torch_geometric.loader import NeighborLoader
 from torch_geometric.data import Data, HeteroData
 
 import pandas as pd
+from torch_geometric.explain import Explainer, GNNExplainer
 
 device = 'cuda:0'
 embedding_size,dropout,lr,weight_decay=32,0.1,1e-2,5e-2
@@ -22,7 +23,7 @@ embedding_size,dropout,lr,weight_decay=32,0.1,1e-2,5e-2
 root='./processed_data/'
 
 dataset=Twibot22(root=root,device=device,process=False,save=False)
-des_tensor,tweets_tensor,num_prop,category_prop,edge_index,edge_type,labels,train_idx,val_idx,test_idx=dataset.dataloader()
+x,edge_index,edge_type,labels,train_idx,val_idx,test_idx=dataset.dataloader()
 
 
 model=BotRGCN(cat_prop_size=3,embedding_dimension=embedding_size).to(device)
@@ -33,7 +34,7 @@ optimizer = torch.optim.AdamW(model.parameters(),
 
 def train(epoch):
     model.train()
-    output = model(des_tensor,tweets_tensor,num_prop,category_prop,edge_index,edge_type)
+    output = model(x,edge_index,edge_type)
     loss_train = loss(output[train_idx], labels[train_idx])
     acc_train = accuracy(output[train_idx], labels[train_idx])
     acc_val = accuracy(output[val_idx], labels[val_idx])
@@ -48,7 +49,7 @@ def train(epoch):
 
 def test():
     model.eval()
-    output = model(des_tensor,tweets_tensor,num_prop,category_prop,edge_index,edge_type)
+    output = model(x,edge_index,edge_type)
     loss_test = loss(output[test_idx], labels[test_idx])
     acc_test = accuracy(output[test_idx], labels[test_idx])
     output=output.max(1)[1].to('cpu').detach().numpy()
@@ -79,3 +80,33 @@ for epoch in range(epochs):
     train(epoch)
     
 test()
+
+"""
+explainer = Explainer(
+    model=model,
+    # algorithm=GNNExplainer(epochs=200),
+    algorithm=GNNExplainer(epochs=50),
+    explanation_type='model',
+    node_mask_type='attributes',
+    edge_mask_type='object',
+    model_config=dict(
+        mode='multiclass_classification',
+        task_level='node',
+        return_type='log_probs',
+    ),
+)
+node_index = 10
+explanation = explainer(data.x, data.edge_index, index=node_index)
+print(f'Generated explanations in {explanation.available_explanations}')
+
+path = 'feature_importance.png'
+explanation.visualize_feature_importance(path, top_k=10)
+print(f"Feature importance plot has been saved to '{path}'")
+
+path = 'subgraph.pdf'
+explanation.visualize_graph(path)
+print(f"Subgraph visualization plot has been saved to '{path}'")
+"""
+
+
+

@@ -348,5 +348,6 @@ class Twibot22(Dataset):
         category_prop=self.cat_prop_preprocess()
         edge_index,edge_type=self.Build_Graph()
         train_idx,val_idx,test_idx=self.train_val_test_mask()
-        return des_tensor,tweets_tensor,num_prop,category_prop,edge_index,edge_type,labels,train_idx,val_idx,test_idx
+        x=torch.cat((des_tensor,tweets_tensor,num_prop,category_prop),dim=1)
+        return x,edge_index,edge_type,labels,train_idx,val_idx,test_idx
     

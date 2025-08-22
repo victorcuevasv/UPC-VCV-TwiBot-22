@@ -6,6 +6,10 @@ import torch.nn.functional as F
 class BotRGCN(nn.Module):
     def __init__(self,des_size=768,tweet_size=768,num_prop_size=5,cat_prop_size=3,embedding_dimension=128,dropout=0.3):
         super(BotRGCN, self).__init__()
+        self.des_size = des_size
+        self.tweet_size = tweet_size
+        self.num_prop_size = num_prop_size
+        self.cat_prop_size = cat_prop_size
         self.dropout = dropout
         self.linear_relu_des=nn.Sequential(
             nn.Linear(des_size,int(embedding_dimension/4)),
@@ -39,12 +43,12 @@ class BotRGCN(nn.Module):
         
         
         
-    def forward(self,des,tweet,num_prop,cat_prop,edge_index,edge_type):
+    def forward(self,x,edge_index,edge_type):
+        des, tweet, num_prop, cat_prop = torch.split(x, [self.des_size, self.tweet_size, self.num_prop_size, self.cat_prop_size], dim=1)
         d=self.linear_relu_des(des)
         t=self.linear_relu_tweet(tweet)
         n=self.linear_relu_num_prop(num_prop)
         c=self.linear_relu_cat_prop(cat_prop)
-        x=torch.cat((d,t,n,c),dim=1)
         
         x=self.linear_relu_input(x)
         x=self.rgcn(x,edge_index,edge_type)
