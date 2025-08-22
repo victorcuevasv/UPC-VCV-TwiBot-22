@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from torch_geometric.nn import RGCNConv,FastRGCNConv,GCNConv,GATConv
 import torch.nn.functional as F
+import sys
 
 class BotRGCN(nn.Module):
     def __init__(self,des_size=768,tweet_size=768,num_prop_size=5,cat_prop_size=3,embedding_dimension=128,dropout=0.3):
@@ -43,7 +44,7 @@ class BotRGCN(nn.Module):
         
         
         
-    def forward(self,x,edge_index,edge_type):
+    def forward(self,x,edge_index,edge_type=None):
         des, tweet, num_prop, cat_prop = torch.split(x, [self.des_size, self.tweet_size, self.num_prop_size, self.cat_prop_size], dim=1)
         d=self.linear_relu_des(des)
         t=self.linear_relu_tweet(tweet)
@@ -389,8 +390,13 @@ class BotRGCN34(nn.Module):
         return x
     
 class BotGCN(nn.Module):
-    def __init__(self,des_size=768,tweet_size=768,num_prop_size=6,cat_prop_size=11,embedding_dimension=128,dropout=0.3):
+    # def __init__(self,des_size=768,tweet_size=768,num_prop_size=6,cat_prop_size=11,embedding_dimension=128,dropout=0.3):
+    def __init__(self,des_size=768,tweet_size=768,num_prop_size=5,cat_prop_size=3,embedding_dimension=128,dropout=0.3):
         super(BotGCN, self).__init__()
+        self.des_size = des_size
+        self.tweet_size = tweet_size
+        self.num_prop_size = num_prop_size
+        self.cat_prop_size = cat_prop_size
         self.dropout = dropout
         self.linear_relu_des=nn.Sequential(
             nn.Linear(des_size,int(embedding_dimension/4)),
@@ -422,7 +428,8 @@ class BotGCN(nn.Module):
         self.gcn1=GCNConv(embedding_dimension,embedding_dimension)
         self.gcn2=GCNConv(embedding_dimension,embedding_dimension)
         
-    def forward(self,des,tweet,num_prop,cat_prop,edge_index,edge_type):
+    def forward(self,x,edge_index,edge_type=None):
+        des, tweet, num_prop, cat_prop = torch.split(x, [self.des_size, self.tweet_size, self.num_prop_size, self.cat_prop_size], dim=1)
         d=self.linear_relu_des(des)
         t=self.linear_relu_tweet(tweet)
         n=self.linear_relu_num_prop(num_prop)

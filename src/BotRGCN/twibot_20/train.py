@@ -1,4 +1,4 @@
-from model import BotRGCN
+from model import BotRGCN, BotGCN
 from Dataset import Twibot22
 import torch
 from torch import nn
@@ -14,7 +14,8 @@ from torch_geometric.loader import NeighborLoader
 from torch_geometric.data import Data, HeteroData
 
 import pandas as pd
-from torch_geometric.explain import Explainer, GNNExplainer
+from torch_geometric.explain import Explainer, GNNExplainer, CaptumExplainer
+from torch_sparse import SparseTensor
 
 device = 'cuda:0'
 embedding_size,dropout,lr,weight_decay=32,0.1,1e-2,5e-2
@@ -24,9 +25,12 @@ root='./processed_data/'
 
 dataset=Twibot22(root=root,device=device,process=False,save=False)
 x,edge_index,edge_type,labels,train_idx,val_idx,test_idx=dataset.dataloader()
+### edge_sparse = SparseTensor.from_edge_index(edge_index, edge_type, (x.shape[0], x.shape[0]))
+#### Use only for BotGCN model
+### edge_sparse=edge_sparse.to(torch.float)
 
-
-model=BotRGCN(cat_prop_size=3,embedding_dimension=embedding_size).to(device)
+### model=BotRGCN(cat_prop_size=3,embedding_dimension=embedding_size).to(device)
+model=BotGCN(cat_prop_size=3,embedding_dimension=embedding_size).to(device)
 loss=nn.CrossEntropyLoss()
 optimizer = torch.optim.AdamW(model.parameters(),
                     lr=lr,weight_decay=weight_decay)
@@ -35,6 +39,7 @@ optimizer = torch.optim.AdamW(model.parameters(),
 def train(epoch):
     model.train()
     output = model(x,edge_index,edge_type)
+    ### output = model(x,edge_sparse)
     loss_train = loss(output[train_idx], labels[train_idx])
     acc_train = accuracy(output[train_idx], labels[train_idx])
     acc_val = accuracy(output[val_idx], labels[val_idx])
@@ -50,6 +55,7 @@ def train(epoch):
 def test():
     model.eval()
     output = model(x,edge_index,edge_type)
+    ### output = model(x,edge_sparse)
     loss_test = loss(output[test_idx], labels[test_idx])
     acc_test = accuracy(output[test_idx], labels[test_idx])
     output=output.max(1)[1].to('cpu').detach().numpy()
@@ -81,11 +87,12 @@ for epoch in range(epochs):
     
 test()
 
-"""
+
 explainer = Explainer(
     model=model,
     # algorithm=GNNExplainer(epochs=200),
     algorithm=GNNExplainer(epochs=50),
+    # algorithm=CaptumExplainer('IntegratedGradients'),
     explanation_type='model',
     node_mask_type='attributes',
     edge_mask_type='object',
@@ -96,7 +103,8 @@ explainer = Explainer(
     ),
 )
 node_index = 10
-explanation = explainer(data.x, data.edge_index, index=node_index)
+explanation = explainer(x, edge_index, index=node_index, edge_type=edge_type)
+### explanation = explainer(x, edge_sparse, index=node_index)
 print(f'Generated explanations in {explanation.available_explanations}')
 
 path = 'feature_importance.png'
@@ -106,7 +114,5 @@ print(f"Feature importance plot has been saved to '{path}'")
 path = 'subgraph.pdf'
 explanation.visualize_graph(path)
 print(f"Subgraph visualization plot has been saved to '{path}'")
-"""
-
 
 
