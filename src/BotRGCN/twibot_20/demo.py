@@ -81,7 +81,7 @@ def test():
             "auc= {:.4f}".format(Auc.item()),
             )
 
-def explain():
+def explain(node_index):
     explainer = Explainer(
         model=model,
         # algorithm=GNNExplainer(epochs=200),
@@ -96,7 +96,6 @@ def explain():
             return_type='log_probs',
         ),
     )
-    node_index = 10
     explanation = explainer(x, edge_index, index=node_index, edge_type=edge_type)
     ### explanation = explainer(x, edge_sparse, index=node_index)
     print(f'Generated explanations in {explanation.available_explanations}')
@@ -105,7 +104,7 @@ def explain():
     explanation.visualize_feature_importance(path, top_k=10)
     print(f"Feature importance plot has been saved to '{path}'")
 
-    path = 'subgraph.pdf'
+    path = 'subgraph.png'
     explanation.visualize_graph(path)
     print(f"Subgraph visualization plot has been saved to '{path}'")
 
@@ -115,11 +114,13 @@ def run():
     for epoch in range(epochs):
         train(epoch)
     test()
-    # explain()
 
 def create_explanation(text):
     print(f"text: {text}")
-    plots = ["feature_importance.png"]
+    node_index = int(text)
+    run()
+    explain(node_index)
+    plots = ["subgraph.png", "feature_importance.png"]
     return plots
 
 # run()
