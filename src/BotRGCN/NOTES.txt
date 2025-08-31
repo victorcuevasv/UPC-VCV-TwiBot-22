@@ -49,3 +49,7 @@ pip install pandas==1.4.4
 pip install gradio==4.44.1
 pip install pydantic==2.10.6
 
+
+sudo apt-get install -y graphviz libgraphviz-dev
+
+pip install graphviz

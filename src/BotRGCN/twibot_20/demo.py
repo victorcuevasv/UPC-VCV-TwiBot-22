@@ -18,6 +18,7 @@ from torch_geometric.explain import Explainer, GNNExplainer, CaptumExplainer
 from torch_sparse import SparseTensor
 
 import gradio as gr
+from tools import m_visualize_graph
 
 device = 'cuda:0'
 embedding_size,dropout,lr,weight_decay=32,0.1,1e-2,5e-2
@@ -80,8 +81,9 @@ def test():
             ##"mcc= {:.4f}".format(mcc.item()),
             "auc= {:.4f}".format(Auc.item()),
             )
+    return output
 
-def explain(node_index):
+def explain(node_index, predictions):
     explainer = Explainer(
         model=model,
         # algorithm=GNNExplainer(epochs=200),
@@ -98,6 +100,16 @@ def explain(node_index):
     )
     explanation = explainer(x, edge_index, index=node_index, edge_type=edge_type)
     ### explanation = explainer(x, edge_sparse, index=node_index)
+    expSubgraphEdgeIndex = explanation.edge_index.cpu().numpy()
+    expSubgraphEdgeMask = explanation.edge_mask.cpu().numpy().nonzero()
+    nodeLabels = {}
+    for edge in expSubgraphEdgeMask[0]:
+        nodeId1 = expSubgraphEdgeIndex[1][edge]
+        nodeId0 = expSubgraphEdgeIndex[0][edge]
+        nodeLabels[nodeId1] = str(int(nodeId1) + 1)
+        nodeLabels[nodeId0] = str(int(nodeId0) + 1)
+        print(f"{nodeId1} -> {nodeId0}")
+    print(f"nodeLabels: {nodeLabels}")
     print(f'Generated explanations in {explanation.available_explanations}')
 
     path = 'feature_importance.png'
@@ -105,7 +117,12 @@ def explain(node_index):
     print(f"Feature importance plot has been saved to '{path}'")
 
     path = 'subgraph.png'
-    explanation.visualize_graph(path)
+    explanation.visualize_graph(path, backend='graphviz')
+    print(f"Subgraph visualization plot has been saved to '{path}'")
+
+    path = 'm_subgraph.png'
+    m_visualize_graph(explanation.edge_index, explanation.edge_mask, path=path, 
+                      backend='graphviz', labels=nodeLabels, predictions=predictions)
     print(f"Subgraph visualization plot has been saved to '{path}'")
 
 def run():
@@ -113,17 +130,21 @@ def run():
     epochs=50
     for epoch in range(epochs):
         train(epoch)
-    test()
+    predictions = test()
+    return predictions
 
 def create_explanation(text):
     print(f"text: {text}")
     node_index = int(text)
-    run()
-    explain(node_index)
-    plots = ["subgraph.png", "feature_importance.png"]
+    predictions = run()
+    print(f"type(predictions): {type(predictions)}")
+    print(f"predictions.size: {str(predictions.size)}")
+    print(f"predictions[node_index]: {predictions[node_index]}")
+    explain(node_index, predictions)
+    plots = ["m_subgraph.png", "feature_importance.png"]
     return plots
 
-# run()
+# create_explanation("10")
 
 
 with gr.Blocks() as demo:
