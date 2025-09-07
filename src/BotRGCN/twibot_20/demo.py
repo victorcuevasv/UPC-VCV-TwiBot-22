@@ -19,6 +19,8 @@ from torch_sparse import SparseTensor
 
 import gradio as gr
 from tools import m_visualize_graph
+import sqlite3
+import json
 
 device = 'cuda:0'
 embedding_size,dropout,lr,weight_decay=32,0.1,1e-2,5e-2
@@ -103,11 +105,24 @@ def explain(node_index, predictions):
     expSubgraphEdgeIndex = explanation.edge_index.cpu().numpy()
     expSubgraphEdgeMask = explanation.edge_mask.cpu().numpy().nonzero()
     nodeLabels = {}
+    query = "SELECT * FROM node WHERE idx = ?"
+    con = sqlite3.connect("nodes_all.db")
+    cur = con.cursor()
     for edge in expSubgraphEdgeMask[0]:
-        nodeId1 = expSubgraphEdgeIndex[1][edge]
-        nodeId0 = expSubgraphEdgeIndex[0][edge]
-        nodeLabels[nodeId1] = str(int(nodeId1) + 1)
-        nodeLabels[nodeId0] = str(int(nodeId0) + 1)
+        nodeId1 = int(expSubgraphEdgeIndex[1][edge])
+        nodeId0 = int(expSubgraphEdgeIndex[0][edge])
+        print(f"nodeId1: {nodeId1}")
+        print(f"nodeId0: {nodeId0}")
+        nodeId1row = cur.execute(query, (nodeId1,)).fetchone()
+        nodeId0row = cur.execute(query, (nodeId0,)).fetchone()
+        print(f"nodeId1row: {nodeId1row}")
+        print(f"nodeId0row: {nodeId0row}")
+        nodeId1data = json.loads(nodeId1row[4])
+        nodeId0data = json.loads(nodeId0row[4])
+        # nodeLabels[nodeId1] = str(int(nodeId1) + 0)
+        # nodeLabels[nodeId0] = str(int(nodeId0) + 0)
+        nodeLabels[nodeId1] = f"{nodeId1}/{nodeId1data['username']}"
+        nodeLabels[nodeId0] = f"{nodeId0}/{nodeId0data['username']}"
         print(f"{nodeId1} -> {nodeId0}")
     print(f"nodeLabels: {nodeLabels}")
     print(f'Generated explanations in {explanation.available_explanations}')
@@ -148,7 +163,7 @@ def create_explanation(text):
 
 
 with gr.Blocks() as demo:
-    textBox = gr.Textbox()
+    textBox = gr.Textbox(label='Node id')
     gallery = gr.Gallery(label="GNN explainability")
     gr.Interface(
         fn=create_explanation, inputs=textBox, outputs=gallery,
